@@ -1,0 +1,173 @@
+{
+  "name": "vba-sync",
+  "displayName": "VBA Sync",
+  "description": "VS Code / Trae extension for bidirectional VBA code sync between Office documents and IDE",
+  "version": "2.0.0",
+  "icon": "icon.png",
+  "publisher": "vba-sync",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished",
+    "onFileSystem:file",
+    "onCommand:vba-sync.enableSync",
+    "onCommand:vba-sync.syncAll",
+    "onCommand:vba-sync.syncSingleFile"
+  ],
+  "main": "dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "vba-sync.enableSync",
+        "title": "VBA: 启用同步"
+      },
+      {
+        "command": "vba-sync.disableSync",
+        "title": "VBA: 禁用同步"
+      },
+      {
+        "command": "vba-sync.newModule",
+        "title": "VBA: 新建模块"
+      },
+      {
+        "command": "vba-sync.syncAll",
+        "title": "VBA: 立即同步所有"
+      },
+      {
+        "command": "vba-sync.openDebug",
+        "title": "VBA: 打开调试窗口"
+      },
+      {
+        "command": "vba-sync.minimizeToBackground",
+        "title": "VBA: 最小化到后台"
+      },
+      {
+        "command": "vba-sync.exportAll",
+        "title": "VBA: 导出所有模块到 IDE"
+      },
+      {
+        "command": "vba-sync.viewStatus",
+        "title": "VBA: 查看同步状态"
+      },
+      {
+        "command": "vba-sync.resetPendingChanges",
+        "title": "VBA: 重置同步计数"
+      },
+      {
+        "command": "vba-sync.openConfig",
+        "title": "VBA: 打开配置"
+      },
+      {
+        "command": "vba-sync.syncSingleFile",
+        "title": "VBA: 同步到文档"
+      }
+    ],
+    "menus": {
+      "explorer/context": [
+        {
+          "command": "vba-sync.enableSync",
+          "when": "resourceExtname =~ /\\.(xlsm|xlsb|xltm|pptm|potm|ppsm|docm|dotm)$/i"
+        },
+        {
+          "command": "vba-sync.syncSingleFile",
+          "when": "resourceExtname =~ /\\.(bas|cls)$/i"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "vba-sync.syncSingleFile",
+          "when": "resourceExtname =~ /\\.(bas|cls)$/i"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "VBA Sync",
+      "properties": {
+        "vbaSync.defaultFolder": {
+          "type": "string",
+          "default": "vba",
+          "description": "默认导出文件夹名"
+        },
+        "vbaSync.autoSync": {
+          "type": "boolean",
+          "default": true,
+          "description": "是否自动同步"
+        },
+        "vbaSync.conflictStrategy": {
+          "type": "string",
+          "default": "ask",
+          "enum": [
+            "ask",
+            "ide-priority",
+            "document-priority"
+          ],
+          "description": "冲突策略"
+        },
+        "vbaSync.showNotifications": {
+          "type": "boolean",
+          "default": true,
+          "description": "是否显示通知"
+        },
+        "vbaSync.syncDelay": {
+          "type": "number",
+          "default": 500,
+          "description": "文件变化后延迟同步时间（毫秒）"
+        },
+        "vbaSync.pythonPath": {
+          "type": "string",
+          "default": "",
+          "description": "自定义 Python 路径"
+        },
+        "vbaSync.excludePatterns": {
+          "type": "array",
+          "default": [
+            "**/node_modules/**",
+            "**/.git/**"
+          ],
+          "description": "排除监控的文件模式"
+        },
+        "vbaSync.debugPrompt.onNewSubFunction": {
+          "type": "boolean",
+          "default": true,
+          "description": "有新增过程时提示"
+        },
+        "vbaSync.debugPrompt.pendingChangesThreshold": {
+          "type": "number",
+          "default": 5,
+          "description": "累积 N 次变更时提示"
+        },
+        "vbaSync.debugPrompt.timeSinceLastDebug": {
+          "type": "number",
+          "default": 1800000,
+          "description": "距上次调试超时（毫秒）"
+        },
+        "vbaSync.syncRefractoryPeriod": {
+          "type": "number",
+          "default": 10000,
+          "description": "文档到IDE同步后的不应期（毫秒），在此期间不会触发反向同步"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "compile": "tsc --noEmit && node esbuild.js",
+    "package": "tsc --noEmit && node esbuild.js --production",
+    "watch": "node esbuild.js --watch",
+    "package-with-timestamp": "tsc --noEmit && node esbuild.js --production && npx vsce package --out ../vsix/vba-sync-2.0.0_$(TZ='Asia/Shanghai' date +'%y%m%dT%H%M').vsix"
+  },
+  "dependencies": {
+    "zod": "^3.22.0"
+  },
+  "devDependencies": {
+    "@types/node": "^18.19.130",
+    "@types/vscode": "^1.85.0",
+    "@vscode/vsce": "^2.20.0",
+    "esbuild": "^0.19.0",
+    "typescript": "^5.0.0"
+  }
+}

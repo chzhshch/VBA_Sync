@@ -1,0 +1,49 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Dependencies
+node_modules
+
+# Build output
+# dist (不要忽略dist目录，因为extension.js是插件的入口点)
+dist/*.js.map
+
+# Source code (只需要编译后的dist目录，不需要源代码)
+src/
+
+# Test files
+test-bugs.ts
+verify-fixes.js
+test/
+
+# Build and config files
+esbuild.js
+tsconfig.json
+
+# IDE and version control files
+.vscode
+.idea
+*.swp
+*.swo
+*~
+.trae/
+.gitignore
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Zip files
+*.zip
+
+# vsix files
+*.vsix
+
+# Debug files
+debug/
