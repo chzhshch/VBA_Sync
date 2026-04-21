@@ -94,7 +94,6 @@ export async function syncSingleFile(syncEngine: SyncEngine, uri?: vscode.Uri) {
         }
 
         await syncEngine.syncFileToDocument(uri.fsPath);
-        vscode.window.showInformationMessage('文件已同步到文档');
     } catch (error) {
         vscode.window.showErrorMessage(`同步文件失败: ${(error as Error).message}`);
     }

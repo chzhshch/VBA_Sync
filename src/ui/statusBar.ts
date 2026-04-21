@@ -17,43 +17,43 @@ export class StatusBar {
     updateStatus(state?: DocumentSyncState, documentName?: string) {
         if (!state) {
             // 未连接状态
-            this.statusBarItem.text = `$(circle-slash) VBA Sync`;
+            this.statusBarItem.text = `$(circle-slash) AutoSyncVBA`;
             this.statusBarItem.color = undefined;
-            this.statusBarItem.tooltip = 'VBA Sync 未连接';
+            this.statusBarItem.tooltip = 'AutoSyncVBA 未连接';
             return;
         }
 
         if (state.isDebugging) {
             // 调试中状态
-            this.statusBarItem.text = `$(debug-alt) VBA Sync: ${documentName} 调试中`;
+            this.statusBarItem.text = `$(debug-alt) AutoSyncVBA: ${documentName} 调试中`;
             this.statusBarItem.color = new vscode.ThemeColor('statusBar.debuggingBackground');
             this.statusBarItem.tooltip = `调试中\n上次同步: ${state.lastSyncTime?.toLocaleString()}`;
         } else if (state.pendingChanges > 0) {
             // 待调试状态
-            this.statusBarItem.text = `$(warning) VBA Sync: ${documentName} (${state.pendingChanges}次变更待调试)`;
+            this.statusBarItem.text = `$(warning) AutoSyncVBA: ${documentName} (${state.pendingChanges}次变更待调试)`;
             this.statusBarItem.color = new vscode.ThemeColor('statusBar.warningBackground');
             this.statusBarItem.tooltip = `有 ${state.pendingChanges} 次变更待调试\n上次同步: ${state.lastSyncTime?.toLocaleString()}`;
         } else if (state.isOfficeOpen) {
             // 后台运行状态
-            this.statusBarItem.text = `$(check) VBA Sync: ${documentName}`;
+            this.statusBarItem.text = `$(check) AutoSyncVBA: ${documentName}`;
             this.statusBarItem.color = undefined;
             this.statusBarItem.tooltip = `后台运行中\n上次同步: ${state.lastSyncTime?.toLocaleString()}`;
         } else {
             // 未连接状态
-            this.statusBarItem.text = `$(circle-slash) VBA Sync`;
+            this.statusBarItem.text = `$(circle-slash) AutoSyncVBA`;
             this.statusBarItem.color = undefined;
-            this.statusBarItem.tooltip = 'VBA Sync 未连接';
+            this.statusBarItem.tooltip = 'AutoSyncVBA 未连接';
         }
     }
 
     showSyncing() {
-        this.statusBarItem.text = `$(loading~spin) VBA Sync: 同步中...`;
+        this.statusBarItem.text = `$(loading~spin) AutoSyncVBA: 同步中...`;
         this.statusBarItem.color = new vscode.ThemeColor('statusBar.noFolderBackground');
         this.statusBarItem.tooltip = '正在同步...';
     }
 
     showError(message: string) {
-        this.statusBarItem.text = `$(error) VBA Sync: 同步失败`;
+        this.statusBarItem.text = `$(error) AutoSyncVBA: 同步失败`;
         this.statusBarItem.color = new vscode.ThemeColor('errorForeground');
         this.statusBarItem.tooltip = `同步失败: ${message}`;
     }

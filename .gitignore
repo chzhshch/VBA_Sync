@@ -50,3 +50,6 @@ vsix/
 *.tmp
 *.temp
 
+# Reference repositories
+ref/
+

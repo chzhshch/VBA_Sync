@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import * as childProcess from 'child_process';
 import * as path from 'path';
+import * as fs from 'fs';
 import { PythonRequest, PythonResponse } from '../../types';
 
 // 调试日志开关
@@ -34,8 +35,38 @@ export class PythonClient {
     }
 
     private startPythonProcess() {
-        const extensionPath = vscode.extensions.getExtension('vba-sync.vba-sync')?.extensionPath || __dirname;
-        const pythonScriptPath = path.join(extensionPath, 'python', 'vba_sync.py');
+        // 尝试获取扩展路径
+        let extensionPath = vscode.extensions.getExtension('AutoSyncVBA.AutoSyncVBA')?.extensionPath || 
+                          vscode.extensions.getExtension('vba-sync.vba-sync')?.extensionPath || 
+                          __dirname;
+        
+        debugLog('Extension path: ' + extensionPath);
+        
+        // 尝试多个可能的 Python 脚本路径
+        const possiblePaths = [
+            path.join(extensionPath, 'python', 'vba_sync.py'),
+            path.join(extensionPath, 'dist', 'python', 'vba_sync.py'),
+            path.join(path.dirname(extensionPath), 'python', 'vba_sync.py')
+        ];
+        
+        let pythonScriptPath = '';
+        let foundPath = false;
+        
+        for (const pathOption of possiblePaths) {
+            debugLog('Checking Python script path: ' + pathOption);
+            if (fs.existsSync(pathOption)) {
+                pythonScriptPath = pathOption;
+                foundPath = true;
+                debugLog('Found Python script at: ' + pythonScriptPath);
+                break;
+            }
+        }
+        
+        if (!foundPath) {
+            // 如果都找不到，使用第一个路径作为默认值
+            pythonScriptPath = possiblePaths[0];
+            debugLog('Could not find Python script in any path, using default: ' + pythonScriptPath);
+        }
         
         debugLog('Starting Python process with script: ' + pythonScriptPath);
 

@@ -721,4 +721,46 @@ export class SyncEngine {
             }
         }
     }
+
+    getDocumentPathForVbaFile(vbaFilePath: string): string | null {
+        const docConfig = this.configManager.getDocumentConfigForFile(vbaFilePath);
+        if (!docConfig) {
+            return null;
+        }
+        
+        const workspaceRoot = this.configManager.getWorkspaceRoot();
+        if (!workspaceRoot) {
+            return null;
+        }
+        
+        return path.join(workspaceRoot, docConfig.path);
+    }
+
+    async checkCodeConsistency(documentPath: string): Promise<boolean> {
+        const docConfig = this.configManager.getDocumentConfig(documentPath);
+        if (!docConfig) {
+            return false;
+        }
+        
+        const workspaceRoot = this.configManager.getWorkspaceRoot();
+        if (!workspaceRoot) {
+            return false;
+        }
+        
+        const vbaFolder = path.join(workspaceRoot, docConfig.vbaFolder);
+        if (!fs.existsSync(vbaFolder)) {
+            return false;
+        }
+        
+        // 检查模块列表一致性
+        const isModuleListConsistent = await this.checkModuleListConsistency(documentPath, vbaFolder);
+        if (!isModuleListConsistent) {
+            return false;
+        }
+        
+        // 检查代码内容一致性
+        // 这里可以添加更详细的代码内容比较逻辑
+        // 目前暂时只检查模块列表一致性
+        return true;
+    }
 }

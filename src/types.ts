@@ -90,6 +90,13 @@ export const COM_ERROR_CODES = {
     CALL_REJECTED: -2147418113,
 };
 
+// VBA 模块信息
+export interface VBAModule {
+    name: string;
+    type: number;
+    hasCode: boolean;
+}
+
 // 同步详细信息类型
 export interface SyncDetails {
     addedModules: string[];

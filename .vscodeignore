@@ -47,3 +47,6 @@ Thumbs.db
 
 # Debug files
 debug/
+
+# Reference repositories
+ref/

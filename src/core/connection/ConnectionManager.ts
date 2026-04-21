@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import { PythonClient } from './PythonClient';
-import { OfficeAppType, EXT_TO_APP, COM_ERROR_CODES } from '../../types';
+import { OfficeAppType, EXT_TO_APP, COM_ERROR_CODES, VBAModule } from '../../types';
 
 // 调试日志开关
 const DEBUG = true;
@@ -208,5 +208,30 @@ export class ConnectionManager {
 
     async showAllWindows() {
         await this.pythonClient.sendRequest({ action: 'showAllWindows', documentPath: '' });
+    }
+
+    async listModules(documentPath: string): Promise<VBAModule[]> {
+        const response = await this.pythonClient.sendRequestWithRetry({
+            action: 'list_modules',
+            documentPath,
+        });
+        return Array.isArray(response.data?.modules) ? response.data.modules : [];
+    }
+
+    async runMacro(documentPath: string, macroName: string) {
+        const response = await this.pythonClient.sendRequestWithRetry({
+            action: 'run_macro',
+            documentPath,
+            macroName,
+        });
+        return response.data || {};
+    }
+
+    async listMacros(documentPath: string) {
+        const response = await this.pythonClient.sendRequestWithRetry({
+            action: 'list_macros',
+            documentPath,
+        });
+        return response.data || {};
     }
 }

@@ -101,8 +101,8 @@ class VBAExporter:
             component.Export(temp_path)
             log_info(f'Exported to temp file: {temp_path}')
 
-            # 尝试多种编码读取文件
-            encodings = ['utf-8-sig', 'utf-8', 'gbk', 'gb2312', 'gb18030', 'cp1252']
+            # 尝试多种编码读取文件（优先中文编码）
+            encodings = ['gbk', 'gb18030', 'utf-8-sig', 'utf-8', 'gb2312', 'cp1252']
             content = None
             used_encoding = None
             

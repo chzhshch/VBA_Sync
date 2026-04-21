@@ -176,6 +176,139 @@ class OfficeConnector:
             log_error(f'Error in open_document: {e}')
             return {'success': False, 'error': str(e)}
 
+    def _get_app_type(self, document_path):
+        """根据文档路径获取应用类型"""
+        ext = os.path.splitext(document_path)[1].lower()
+        if ext in ['.xlsx', '.xlsm', '.xlsb', '.xltx', '.xltm']:
+            return 'excel'
+        elif ext in ['.docx', '.docm', '.dotx', '.dotm']:
+            return 'word'
+        elif ext in ['.pptx', '.pptm', '.potx', '.potm', '.ppsm']:
+            return 'powerpoint'
+        else:
+            return 'excel'  # 默认返回 excel
+
+    def run_macro(self, document_path, macro_name):
+        """运行文档中的宏"""
+        try:
+            log_info(f'Running macro: {macro_name} in document: {document_path}')
+
+            # 检查文档是否已打开
+            if document_path not in self.documents:
+                log_info('Document not in documents dictionary, trying to open it')
+                # 尝试打开文档
+                result = self.open_document(document_path, self._get_app_type(document_path))
+                if not result['success']:
+                    return {'success': False, 'error': f'Failed to open document: {result.get("error", "Unknown error")}'}
+
+            # 获取文档对象
+            doc = self.documents[document_path]
+
+            # 获取Application对象
+            app = None
+            if hasattr(doc, 'Application'):
+                app = doc.Application
+                log_info(f'Got Application object: {type(app)}')
+            else:
+                # 尝试从应用字典中获取
+                app_type = self._get_app_type(document_path)
+                if app_type in self.apps:
+                    app = self.apps[app_type]
+                    log_info(f'Got Application from apps dictionary: {type(app)}')
+
+            if app is None:
+                return {'success': False, 'error': 'Could not get Application object'}
+
+            # 执行宏
+            log_info(f'Executing macro: {macro_name}')
+            app.Run(macro_name)
+            log_info(f'Macro executed successfully: {macro_name}')
+
+            return {'success': True, 'message': f'Macro {macro_name} executed successfully'}
+
+        except Exception as e:
+            log_error(f'Error running macro: {e}')
+            return {'success': False, 'error': str(e)}
+
+    def list_macros(self, document_path):
+        """列出文档中无参数的标准模块中的宏"""
+        try:
+            log_info(f'Listing macros in document: {document_path}')
+
+            # 检查文档是否已打开
+            if document_path not in self.documents:
+                log_info('Document not in documents dictionary, trying to open it')
+                # 尝试打开文档
+                result = self.open_document(document_path, self._get_app_type(document_path))
+                if not result['success']:
+                    return {'success': False, 'error': f'Failed to open document: {result.get("error", "Unknown error")}'}
+
+            # 获取文档对象
+            doc = self.documents[document_path]
+
+            # 获取VBA项目
+            vba_project = None
+            if hasattr(doc, 'VBProject'):
+                vba_project = doc.VBProject
+                log_info(f'Got VBProject object: {type(vba_project)}')
+            else:
+                return {'success': False, 'error': 'Could not get VBProject'}
+
+            # 获取所有组件
+            components = vba_project.VBComponents
+            log_info(f'Found {components.Count} components')
+
+            macros = []
+
+            # 遍历所有组件
+            for i in range(1, components.Count + 1):
+                component = components.Item(i)
+                component_name = component.Name
+                component_type = component.Type
+
+                log_info(f'Processing component: {component_name}, Type: {component_type}')
+
+                # 只处理标准模块（Type = 1）
+                if component_type == 1:
+                    log_info(f'Processing standard module: {component_name}')
+                    # 获取代码模块
+                    code_module = component.CodeModule
+                    line_count = code_module.CountOfLines
+                    log_info(f'Code module lines: {line_count}')
+
+                    if line_count > 0:
+                        # 读取所有代码
+                        code = code_module.Lines(1, line_count)
+                        # 解析代码，找出无参数的宏
+                        module_macros = self._parse_macros(code, component_name)
+                        macros.extend(module_macros)
+
+            log_info(f'Found {len(macros)} macros')
+            return {'success': True, 'macros': macros}
+
+        except Exception as e:
+            log_error(f'Error listing macros: {e}')
+            return {'success': False, 'error': str(e)}
+
+    def _parse_macros(self, code, module_name):
+        """解析VBA代码，找出无参数的宏"""
+        import re
+        macros = []
+
+        # 只匹配 Public Sub 定义，且无参数
+        pattern = r'^\s*Public\s+Sub\s+([\w\u4e00-\u9fa5]+)\s*\(\s*\)\s*.*$'
+        lines = code.split('\n')
+
+        for line in lines:
+            match = re.match(pattern, line, re.IGNORECASE)
+            if match:
+                macro_name = match.group(1)
+                full_name = f'{module_name}.{macro_name}'
+                macros.append(full_name)
+                log_info(f'Found macro: {full_name}')
+
+        return macros
+
     def _process_rot_moniker(self, moniker, app_type, instances, target_document_path=None):
         """
         处理 ROT 中的单个 moniker，尝试获取 Office 应用实例

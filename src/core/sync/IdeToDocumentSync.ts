@@ -3,7 +3,7 @@ import * as path from 'path';
 import { ConnectionManager } from '../connection/ConnectionManager';
 import { FileComparer } from '../compare/FileComparer';
 import { NotificationManager } from '../notification/NotificationManager';
-import { SyncDetails } from '../../types';
+import { SyncDetails, VBAModule } from '../../types';
 
 // 调试日志开关
 const DEBUG = true;
@@ -49,6 +49,9 @@ export class IdeToDocumentSync {
             }
             
             try {
+                // 获取文档中已有的模块列表
+                const documentModules: VBAModule[] = await this.connectionManager.listModules(documentPath);
+                
                 // 导出所有模块到临时文件夹
                 await this.connectionManager.exportAll(documentPath, tempFolder);
                 
@@ -60,31 +63,50 @@ export class IdeToDocumentSync {
                 
                 // 检查每个文件是否需要同步
                 for (const filePath of filePaths) {
-                    const moduleName = path.basename(filePath);
+                    const moduleFileName = path.basename(filePath);
+                    const moduleName = path.basename(filePath, path.extname(filePath));
                     const ext = path.extname(filePath).toLowerCase();
                     
                     if (ext === '.bas' || ext === '.cls') {
-                        const tempFilePath = path.join(tempFolder, moduleName);
+                        const tempFilePath = path.join(tempFolder, moduleFileName);
+                        
+                        // 根据扩展名确定期望的模块类型
+                        let expectedTypes: number[];
+                        if (ext === '.bas') {
+                            expectedTypes = [1];  // 标准模块
+                        } else {
+                            expectedTypes = [2, 100];  // 类模块或文档模块
+                        }
                         
                         // 检查文件是否存在（处理删除事件）
                         if (!fs.existsSync(filePath)) {
                             // 文件已被删除，需要从文档中删除对应模块
                             deletedFiles.push(filePath);
-                        } else if (fs.existsSync(tempFilePath)) {
+                        } else {
+                            // 检查模块是否已存在于文档中（同时比较名称和类型）
+                            const moduleExists = documentModules.some(module => 
+                                module.name === moduleName && expectedTypes.includes(module.type)
+                            );
+                            
                             // 第二层：具体模块内容比较
                             debugLog('=== 第二层：具体模块内容比较 ===');
-                            const diffType = FileComparer.compareFilesWithMultiLevel(filePath, tempFilePath);
-                            
-                            if (diffType === 'identical') {
-                                debugLog('File content is identical, skipping sync for: ' + moduleName);
-                                continue;
-                            } else if (diffType === 'case-only' || diffType === 'substantial') {
-                                // IDE发起的同步，直接同步所有差异
+                            if (fs.existsSync(tempFilePath)) {
+                                const diffType = FileComparer.compareFilesWithMultiLevel(filePath, tempFilePath);
+                                
+                                if (diffType === 'identical') {
+                                    debugLog('File content is identical, skipping sync for: ' + moduleFileName);
+                                    continue;
+                                } else if (diffType === 'case-only' || diffType === 'substantial') {
+                                    // IDE发起的同步，直接同步所有差异
+                                    filesToSync.push(filePath);
+                                }
+                            } else if (!moduleExists) {
+                                // 模块在文档中不存在，是新增
+                                filesToSync.push(filePath);
+                            } else {
+                                // 模块在文档中存在，但临时文件导出失败，仍然视为修改
                                 filesToSync.push(filePath);
                             }
-                        } else {
-                            // 新增文件
-                            filesToSync.push(filePath);
                         }
                     }
                 }
@@ -236,15 +258,29 @@ export class IdeToDocumentSync {
                         const moduleName = path.basename(filePath, path.extname(filePath));
                         const fileName = path.basename(filePath);
                         const tempFilePath = path.join(tempFolder, fileName);
+                        const ext = path.extname(filePath).toLowerCase();
                         
                         await this.connectionManager.importModule(documentPath, filePath, moduleName);
                         debugLog('Module imported successfully: ' + moduleName);
                         
-                        if (fs.existsSync(tempFilePath)) {
-                            // 文件已存在，是修改
+                        // 根据扩展名确定期望的模块类型
+                        let expectedTypes: number[];
+                        if (ext === '.bas') {
+                            expectedTypes = [1];  // 标准模块
+                        } else {
+                            expectedTypes = [2, 100];  // 类模块或文档模块
+                        }
+                        
+                        // 检查模块是否已存在于文档中（同时比较名称和类型）
+                        const moduleExists = documentModules.some(module => 
+                            module.name === moduleName && expectedTypes.includes(module.type)
+                        );
+                        
+                        if (moduleExists) {
+                            // 模块已存在，是修改
                             syncDetails.modifiedModules.push(moduleName);
                         } else {
-                            // 文件不存在，是新增
+                            // 模块不存在，是新增
                             syncDetails.addedModules.push(moduleName);
                         }
                     }

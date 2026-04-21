@@ -1,8 +1,8 @@
-# VBA Sync 插件使用说明书
+# AutoSyncVBA 插件使用说明书
 
 ## 插件简介
 
-VBA Sync 是一个 VS Code 扩展，用于在 Office 文档（Excel、Word、PowerPoint）和 IDE 之间实现双向 VBA 代码同步。它可以帮助开发者在 VS Code 中编辑 VBA 代码，并自动同步到 Office 文档中，同时也可以从文档中导出 VBA 代码到 IDE 中。
+AutoSyncVBA（曾用名：VBA Sync）是一个 VS Code 扩展，用于在 Office 文档（Excel、Word、PowerPoint）和 IDE 之间实现双向 VBA 代码同步。它可以帮助开发者在 VS Code 中编辑 VBA 代码，并自动同步到 Office 文档中，同时也可以从文档中导出 VBA 代码到 IDE 中。
 
 ## 安装说明
 
@@ -147,5 +147,5 @@ VBA Sync 是一个 VS Code 扩展，用于在 Office 文档（Excel、Word、Pow
 
 ---
 
-**版权所有 © 2026 VBA Sync 团队**
+**版权所有 © 2026 AutoSyncVBA 团队**
 **保留所有权利**

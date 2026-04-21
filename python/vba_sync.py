@@ -270,6 +270,22 @@ class VbaSyncBridge:
                     debug_log(f'Objects cleaned up for document: {document_path}')
                 return {'success': True, 'data': result}
 
+            elif action == 'run_macro':
+                macro_name = request.get('macroName')
+                if not macro_name:
+                    debug_error('Macro name is required')
+                    return {'success': False, 'error': 'Macro name is required'}
+                debug_log(f'Running macro: {macro_name} in document: {document_path}')
+                result = connector.run_macro(document_path, macro_name)
+                debug_log(f'Run macro result: {result}')
+                return {'success': True, 'data': result}
+
+            elif action == 'list_macros':
+                debug_log(f'Listing macros for document: {document_path}')
+                result = connector.list_macros(document_path)
+                debug_log(f'List macros result: {result}')
+                return {'success': True, 'data': result}
+
             else:
                 debug_error(f'Unknown action: {action}')
                 return {'success': False, 'error': f'Unknown action: {action}'}
